@@ -1,5 +1,6 @@
 package edwardwang.myapplication
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -26,6 +27,8 @@ class MainActivity : AppCompatActivity() {
             val serverInfo:String = "IPAddress: "+ipAddress + " \tPort:" + port
             Log.i("ConnToServer",serverInfo)
             connectToServer(ipAddress.text.toString(), port.text.toString().toInt())
+            //val intent = Intent(this, StreamDisplay::class.java);
+            //startActivity(intent);
         }
         val disconnectButton = findViewById<Button>(R.id.disconnectButton)
         disconnectButton.setOnClickListener {
@@ -33,17 +36,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun connectToServer(ipAddress:String, port:Int){
-        /*
-        if(isConnected){
-            return
-        }
-        */
+    fun connectToServer(ipAddress:String, port:Int)
+    {
         Thread({
             val servAddress = InetAddress.getByName(ipAddress)
             val socket = Socket(servAddress, port)
             val serverOutputTextView:TextView = findViewById<TextView>(R.id.serverOutput)
-            try{
+            try
+            {
                 val input = BufferedReader(InputStreamReader(socket.getInputStream()))
                 runOnUiThread({
                     isConnected = true
@@ -53,11 +53,16 @@ class MainActivity : AppCompatActivity() {
                 Log.d("ConnectToServer","Begin Reading")
 
                 var txt = ""
-                while(true){
-                    if(input.ready()){
+                while(true)
+                {
+                    if(input.ready())
+                    {
                         Log.d("ConnectToServer","Ready to read from server.")
+
+                        saveStream();
                         txt = input.readLine()
-                        if(txt != null){
+                        if(txt != null)
+                        {
                             runOnUiThread({
                                 serverOutputTextView.text = txt
                             })
@@ -76,9 +81,15 @@ class MainActivity : AppCompatActivity() {
                     serverOutputTextView.text = "Disconnected To Server"
                     isConnected = false
                 })
-            }catch (e:Exception){
+            }catch (e:Exception)
+            {
                 e.printStackTrace()
             }
         }).start()
+    }
+
+    fun saveStream()
+    {
+
     }
 }
