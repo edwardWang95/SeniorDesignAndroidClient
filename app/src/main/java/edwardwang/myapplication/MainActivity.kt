@@ -59,7 +59,8 @@ class MainActivity : AppCompatActivity() {
                     {
                         Log.d("ConnectToServer","Ready to read from server.")
 
-                        saveStream();
+                        //saveStream()
+
                         txt = input.readLine()
                         if(txt != null)
                         {
