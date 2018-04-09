@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
 
     var isConnected:Boolean = false
     val charset = Charsets.UTF_32
-    var testFileKey:ByteArray = "0x000102030405060708090A0B0C0D0E0F".toByteArray(charset)
+    var testFileKey:ByteArray = "0x000102030405060708090A0B0C0D0E0F".toByteArray()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
     fun cipherTest()
     {
         val serverOutputTextView:TextView = findViewById<TextView>(R.id.serverOutput)
-        val inputStream: InputStream = File("testEncryptedAES128.txt").inputStream()
+        val inputStream: InputStream = File("testEncryptedAES128.txt").inputStream() as InputStream
         val inputStringTest = inputStream.bufferedReader().use { it.readText() }
         serverOutputTextView.text = decryptTest(testFileKey,inputStringTest.toByteArray(charset)).toString()
     }
@@ -129,10 +129,10 @@ class MainActivity : AppCompatActivity() {
      * */
     fun decrypt(/*ivBytes:ByteArray, */secretKeyBytes:ByteArray, encrypted:ByteArray):ByteArray
     {
-        //var initializationVector:AlgorithmParameterSpec = IvParameterSpec(ivBytes)
+        var initializationVector:AlgorithmParameterSpec = IvParameterSpec(ivBytes)
         var secretKeySpec:SecretKeySpec = SecretKeySpec(secretKeyBytes, "AES")
         var cipher:Cipher = Cipher.getInstance("AES_128/CBC/NoPadding")
-        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec)
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, initializationVector)
         return cipher.doFinal(encrypted)
     }
 
