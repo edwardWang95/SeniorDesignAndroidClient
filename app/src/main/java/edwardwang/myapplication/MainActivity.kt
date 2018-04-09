@@ -11,6 +11,8 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.InetAddress
 import java.net.Socket
+import javax.crypto.Cipher
+import javax.crypto.spec.SecretKeySpec
 
 class MainActivity : AppCompatActivity() {
 
@@ -93,4 +95,13 @@ class MainActivity : AppCompatActivity() {
     {
 
     }
+
+    fun decrypt(raw:ByteArray, encrypted:ByteArray):ByteArray
+    {
+        var secretKeySpec = SecretKeySpec(raw, "AES")
+        var cipher:Cipher = Cipher.getInstance("AES/CBC/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec)
+        return cipher.doFinal(encrypted)
+    }
+
 }
