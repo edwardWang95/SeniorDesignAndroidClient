@@ -8,20 +8,32 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import java.io.BufferedReader
+import java.io.File
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.InetAddress
 import java.net.Socket
+import java.security.spec.AlgorithmParameterSpec
 import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 class MainActivity : AppCompatActivity() {
 
     var isConnected:Boolean = false
+    val charset = Charsets.UTF_32
+    var testFileKey:ByteArray = "0x000102030405060708090A0B0C0D0E0F".toByteArray(charset)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         //widgets
+        //setUpWidgets()
+        cipherTest()
+    }
+
+    fun setUpWidgets()
+    {
         val ipAddress = findViewById<EditText>(R.id.ipAddressInput)
         val port = findViewById<EditText>(R.id.portInput)
         val connToServer:Button = findViewById<Button>(R.id.connToServerButton)
@@ -36,6 +48,14 @@ class MainActivity : AppCompatActivity() {
         disconnectButton.setOnClickListener {
 
         }
+    }
+
+    fun cipherTest()
+    {
+        val serverOutputTextView:TextView = findViewById<TextView>(R.id.serverOutput)
+        val inputStream: InputStream = File("testEncryptedAES128.txt").inputStream()
+        val inputStringTest = inputStream.bufferedReader().use { it.readText() }
+        serverOutputTextView.text = decryptTest(testFileKey,inputStringTest.toByteArray(charset)).toString()
     }
 
     fun connectToServer(ipAddress:String, port:Int)
@@ -96,10 +116,30 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun decrypt(raw:ByteArray, encrypted:ByteArray):ByteArray
+
+    /**
+     * Decrypt AES 128 block
+     *
+     * test file: testEncryptAES128.jpg
+     * test key: 0x000102030405060708090A0B0C0D0E0F
+     *
+     * @param ivBytes         : initialization vector
+     * @param secretKeyBytes  : secret key
+     * @param encrypted       : encrypted block
+     * */
+    fun decrypt(/*ivBytes:ByteArray, */secretKeyBytes:ByteArray, encrypted:ByteArray):ByteArray
     {
-        var secretKeySpec = SecretKeySpec(raw, "AES")
-        var cipher:Cipher = Cipher.getInstance("AES/CBC/NoPadding")
+        //var initializationVector:AlgorithmParameterSpec = IvParameterSpec(ivBytes)
+        var secretKeySpec:SecretKeySpec = SecretKeySpec(secretKeyBytes, "AES")
+        var cipher:Cipher = Cipher.getInstance("AES_128/CBC/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec)
+        return cipher.doFinal(encrypted)
+    }
+
+    fun decryptTest(secretKeyBytes:ByteArray, encrypted:ByteArray):ByteArray
+    {
+        var secretKeySpec:SecretKeySpec = SecretKeySpec(secretKeyBytes, "AES")
+        var cipher:Cipher = Cipher.getInstance("AES_128/CBC/NoPadding")
         cipher.init(Cipher.DECRYPT_MODE, secretKeySpec)
         return cipher.doFinal(encrypted)
     }
