@@ -5,7 +5,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 22
+    compileSdkVersion 26
     defaultConfig {
         applicationId "edwardwang.myapplication"
         minSdkVersion 19
@@ -20,7 +20,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    buildToolsVersion '23.0.1'
+    buildToolsVersion '26.0.2'
 }
 
 dependencies {
