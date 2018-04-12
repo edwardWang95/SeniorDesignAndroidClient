@@ -51,18 +51,18 @@ class MainActivity : AppCompatActivity() {
         try
         {
             val serverOutputTextView:TextView = findViewById<TextView>(R.id.serverOutput)
+            //break encrypted file into 16 byte/128 bit blocks
+            val inputStream:InputStream = resources.openRawResource(R.raw.ciphertxt)
+            val encrypt = inputStream.readBytes(32)
             //get key
-            val inputStream = resources.openRawResource(R.raw.test_aes)
-            val bufferedReader = BufferedReader(InputStreamReader(inputStream))
             val testFileKey = ByteArray(16)
             for(i in 0..15)
             {
                 testFileKey[i] = i.toByte()
             }
-            var lineStr: String = bufferedReader.readLine()
-            bufferedReader.close()
-            //break encrypted file into 16 byte/128 bit blocks
-            val encrypt = lineStr.toByteArray()
+
+            System.out.println("Size of encrypt file: "+encrypt.size)
+/*
             var encrypt1 = ByteArray(16)
             var encrypt2 = ByteArray(16)
             var encrypt3 = ByteArray(16)
@@ -72,16 +72,19 @@ class MainActivity : AppCompatActivity() {
             for(i in 16..31)encrypt2[i-16] = encrypt[i]
             for(i in 32..47)encrypt3[i-32] = encrypt[i]
             for(i in 48..57)encrypt4[i-48] = encrypt[i]
-
+*/
             //set initialization vector
             val iv = ByteArray(16)
             //AES decrypts at 16 bytes at a given time
-            val decryptedMessage1:String = decrypt(iv, testFileKey, encrypt1).toString()
-            val decryptedMessage2:String = decrypt(iv, testFileKey, encrypt2).toString()
-            val decryptedMessage3:String = decrypt(iv, testFileKey, encrypt3).toString()
-            val decryptedMessage4:String = decrypt(iv, testFileKey, encrypt4).toString()
+            val decryptedMessageByteArray = decrypt(iv, testFileKey, encrypt)
+            //val decryptedMessage2:String = decrypt(iv, testFileKey, encrypt2).toString()
+            //val decryptedMessage3:String = decrypt(iv, testFileKey, encrypt3).toString()
+            //val decryptedMessage4:String = decrypt(iv, testFileKey, encrypt4).toString()
 
-            serverOutputTextView.text = decryptedMessage1 + decryptedMessage2 + decryptedMessage3 + decryptedMessage4
+            //serverOutputTextView.text = decryptedMessage1 + decryptedMessage2 + decryptedMessage3 + decryptedMessage4
+            var decryptedMessage:String? = ""
+            for(i in 0..15)decryptedMessage += decryptedMessageByteArray[i].toChar()
+            serverOutputTextView.text = decryptedMessage
         }catch (e: IOException)
         {
             e.printStackTrace()
@@ -102,15 +105,17 @@ class MainActivity : AppCompatActivity() {
     {
         val initializationVector = IvParameterSpec(ivBytes)
         val secretKeySpec = SecretKeySpec(secretKeyBytes, "AES_128")
-        val cipher:Cipher = Cipher.getInstance("AES_128/CBC/NoPadding")
+        val cipher:Cipher = Cipher.getInstance("AES/CBC/NoPadding")
         cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, initializationVector)
         try{
             return cipher.doFinal(encrypted)
         }catch (e: IllegalBlockSizeException)
         {
+            System.out.println("Illegal Block Size Exception")
+            e.printStackTrace()
             var newEncrypted = ByteArray(16)
             for(i in 0..encrypted.size-1) newEncrypted[i] = encrypted[i]
-            for(i in encrypted.size..15) newEncrypted[i] = 0
+            if(encrypted.size < 15) for(i in encrypted.size..15) newEncrypted[i] = 0
             return cipher.doFinal(newEncrypted)
         }
     }
