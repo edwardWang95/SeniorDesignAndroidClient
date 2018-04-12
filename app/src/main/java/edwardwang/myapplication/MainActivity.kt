@@ -9,6 +9,7 @@ import android.widget.TextView
 import java.io.*
 import java.net.InetAddress
 import java.net.Socket
+import java.nio.charset.Charset
 import java.security.spec.AlgorithmParameterSpec
 import javax.crypto.Cipher
 import javax.crypto.IllegalBlockSizeException
@@ -52,14 +53,26 @@ class MainActivity : AppCompatActivity() {
         {
             val serverOutputTextView:TextView = findViewById<TextView>(R.id.serverOutput)
             //break encrypted file into 16 byte/128 bit blocks
-            val inputStream:InputStream = resources.openRawResource(R.raw.ciphertxt)
-            val encrypt = inputStream.readBytes(32)
+            val inputStream:InputStream = resources.openRawResource(R.raw.secret2)
+            val readInEncrypt = inputStream.readBytes(16)
+            var encrypt = ByteArray(16)
+            for(i in 0..15) encrypt[i] = readInEncrypt[15-i]
+
             //get key
             val testFileKey = ByteArray(16)
-            for(i in 0..15)
-            {
-                testFileKey[i] = i.toByte()
-            }
+
+            //0c0d0e0f  08090a0b  040506070  0010203
+            /*
+            for(i in 12..15)testFileKey[i-12] = i.toByte()
+            for(i in 8..11) testFileKey[i-4] = i.toByte()
+            for(i in 4..7) testFileKey[i+4] =  i.toByte()
+            for(i in 0..3)testFileKey[i+12] =  i.toByte()
+            */
+
+            //secret2
+            //00000001 00000000 00000000
+            testFileKey[3] = 1.toByte()
+
 
             System.out.println("Size of encrypt file: "+encrypt.size)
 /*
@@ -77,14 +90,26 @@ class MainActivity : AppCompatActivity() {
             val iv = ByteArray(16)
             //AES decrypts at 16 bytes at a given time
             val decryptedMessageByteArray = decrypt(iv, testFileKey, encrypt)
+            val correctedDecryptedByteArray = ByteArray(16)
+            for(i in 0..15) correctedDecryptedByteArray[i] = decryptedMessageByteArray[15-i]
             //val decryptedMessage2:String = decrypt(iv, testFileKey, encrypt2).toString()
             //val decryptedMessage3:String = decrypt(iv, testFileKey, encrypt3).toString()
             //val decryptedMessage4:String = decrypt(iv, testFileKey, encrypt4).toString()
 
             //serverOutputTextView.text = decryptedMessage1 + decryptedMessage2 + decryptedMessage3 + decryptedMessage4
+
+            //convert byte array to char test
+            /*
             var decryptedMessage:String? = ""
             for(i in 0..15)decryptedMessage += decryptedMessageByteArray[i].toChar()
             serverOutputTextView.text = decryptedMessage
+            */
+
+            ///*
+            //convert char to ascii
+            val charset = Charsets.US_ASCII
+            serverOutputTextView.text = correctedDecryptedByteArray.toString(charset)
+            //*/
         }catch (e: IOException)
         {
             e.printStackTrace()
