@@ -59,10 +59,10 @@ class MainActivity : AppCompatActivity() {
             System.out.println("Size: "+readInEncrypt.size)
 
             //get array of byte array blocks
-            val numOfBlocks:Int = readInEncrypt.size/16
-            val padding = readInEncrypt.size % 16
-            var encryptedBlocks:Array<ByteArray> = getEncryptedBlocksByteArray(numOfBlocks,padding,
-                    readInEncrypt)
+                //val numOfBlocks:Int = readInEncrypt.size/16
+                //val padding = readInEncrypt.size % 16
+                //var encryptedBlocks:Array<ByteArray> = getEncryptedBlocksByteArray(numOfBlocks,padding, readInEncrypt)
+            val encrypted = getProperEncryptedStreamFormat(readInEncrypt)
 
             //get key - 00000001 00000000 00000000
             val key = ByteArray(16)
@@ -72,7 +72,11 @@ class MainActivity : AppCompatActivity() {
             val iv = ByteArray(16)
 
             //AES decrypts at 16 bytes at a given time
-            val decryptedByteArray = getDecryptedByteArray(numOfBlocks, encryptedBlocks, iv, key)
+                //val decryptedByteArray = getDecryptedByteArray(numOfBlocks, encryptedBlocks, iv, key)
+            //val decryptedByteArray = ByteArray(encrypted.size)
+            val decryptedByteArray = decrypt(iv, key, encrypted)
+
+            System.out.println("Decrypted Size: "+decryptedByteArray.size)
 
             //convert char to ascii
             val charset = Charsets.US_ASCII
@@ -82,6 +86,65 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
+
+    /**
+     * Reverse order each block[16 bytes] as well as add padding if necessary
+     * */
+    fun getProperEncryptedStreamFormat(original:ByteArray) : ByteArray
+    {
+        val numOfBlocks = original.size/16
+        val padding = original.size % 16
+        var encrypted = ByteArray(original.size + padding)
+        for(block in 0..numOfBlocks-1)
+            for(byte in 0..15)
+            {
+                try{
+                    encrypted[block * 16 + byte] = original[block * 16 + (15-byte)]
+                    //encrypted[block * 16 + (16-byte)] = original[block * 16 + byte]
+                }catch (e:ArrayIndexOutOfBoundsException)
+                {
+                    encrypted[block*16+byte] = 0
+                }
+            }
+        return encrypted
+    }
+
+    /**
+     * Decrypt AES 128-bits block in 16 bytes blocks
+     *
+     * test file: testEncryptAES128.jpg
+     * test key: 0x000102030405060708090A0B0C0D0E0F
+     *
+     * @param ivBytes         : initialization vector - 16 bytes for a 128-byte block
+     * @param secretKeyBytes  : secret key            - 16 bytes
+     * @param encrypted       : encrypted block
+     * */
+    fun decrypt(ivBytes:ByteArray, secretKeyBytes:ByteArray, encrypted:ByteArray):ByteArray {
+        val decrypted = ByteArray(encrypted.size)
+        val initializationVector = IvParameterSpec(ivBytes)
+        val secretKeySpec = SecretKeySpec(secretKeyBytes, "AES_128")
+        val cipher: Cipher = Cipher.getInstance("AES/CBC/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, initializationVector)
+        for(block in 0..decrypted.size/16)
+        {
+            val decryptedBlock = ByteArray(16)
+            
+        }
+        return reverseBlockOrder(cipher.doFinal(encrypted))
+    }
+        /*
+        try{
+            return reverseBlockOrder(cipher.doFinal(encrypted))
+        }catch (e: IllegalBlockSizeException)
+        {
+            System.out.println("Illegal Block Size Exception")
+            e.printStackTrace()
+            var newEncrypted = ByteArray(16)
+            for(i in 0..encrypted.size-1) newEncrypted[i] = encrypted[i]
+            if(encrypted.size < 15) for(i in encrypted.size..15) newEncrypted[i] = 0
+            return reverseBlockOrder(cipher.doFinal(newEncrypted))
+        }
+        */
 
     fun getDecryptedByteArray(numOfBlocks: Int,encryptedBlocks:Array<ByteArray>, iv:ByteArray, key:ByteArray):ByteArray
     {
@@ -112,35 +175,6 @@ class MainActivity : AppCompatActivity() {
         var reversedByteArray = ByteArray(16)
         for(i in 0..15) reversedByteArray[i] = byteArray[15-i]
         return reversedByteArray
-    }
-
-    /**
-     * Decrypt AES 128-bits block in 16 bytes blocks
-     *
-     * test file: testEncryptAES128.jpg
-     * test key: 0x000102030405060708090A0B0C0D0E0F
-     *
-     * @param ivBytes         : initialization vector - 16 bytes for a 128-byte block
-     * @param secretKeyBytes  : secret key            - 16 bytes
-     * @param encrypted       : encrypted block
-     * */
-    fun decrypt(ivBytes:ByteArray, secretKeyBytes:ByteArray, encrypted:ByteArray):ByteArray
-    {
-        val initializationVector = IvParameterSpec(ivBytes)
-        val secretKeySpec = SecretKeySpec(secretKeyBytes, "AES_128")
-        val cipher:Cipher = Cipher.getInstance("AES/CBC/NoPadding")
-        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, initializationVector)
-        try{
-            return reverseBlockOrder(cipher.doFinal(encrypted))
-        }catch (e: IllegalBlockSizeException)
-        {
-            System.out.println("Illegal Block Size Exception")
-            e.printStackTrace()
-            var newEncrypted = ByteArray(16)
-            for(i in 0..encrypted.size-1) newEncrypted[i] = encrypted[i]
-            if(encrypted.size < 15) for(i in encrypted.size..15) newEncrypted[i] = 0
-            return reverseBlockOrder(cipher.doFinal(newEncrypted))
-        }
     }
 
     fun connectToServer(ipAddress:String, port:Int)
