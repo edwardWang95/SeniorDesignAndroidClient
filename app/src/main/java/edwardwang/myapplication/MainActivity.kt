@@ -52,19 +52,20 @@ class MainActivity : AppCompatActivity() {
         try
         {
             val serverOutputTextView:TextView = findViewById<TextView>(R.id.serverOutput)
+
             //break encrypted file into 16 byte/128 bit blocks
             val inputStream:InputStream = resources.openRawResource(R.raw.secret3)
             val readInEncrypt = inputStream.readBytes(16)
             System.out.println("Size: "+readInEncrypt.size)
+
             //get array of byte array blocks
-            val numOfBlocks:Int = readInEncrypt.size/4
-            var encryptedBlocks:Array<ByteArray> = getEncryptedBlocksByteArray(numOfBlocks,
+            val numOfBlocks:Int = readInEncrypt.size/16
+            val padding = readInEncrypt.size % 16
+            var encryptedBlocks:Array<ByteArray> = getEncryptedBlocksByteArray(numOfBlocks,padding,
                     readInEncrypt)
 
-            //get key
+            //get key - 00000001 00000000 00000000
             val key = ByteArray(16)
-            //secret2
-            //00000001 00000000 00000000
             key[3] = 1.toByte()
 
             //set initialization vector
@@ -75,7 +76,7 @@ class MainActivity : AppCompatActivity() {
 
             //convert char to ascii
             val charset = Charsets.US_ASCII
-            serverOutputTextView.text = correctedDecryptedByteArray.toString(charset)
+            serverOutputTextView.text = decryptedByteArray.toString(charset)
         }catch (e: IOException)
         {
             e.printStackTrace()
@@ -84,32 +85,25 @@ class MainActivity : AppCompatActivity() {
 
     fun getDecryptedByteArray(numOfBlocks: Int,encryptedBlocks:Array<ByteArray>, iv:ByteArray, key:ByteArray):ByteArray
     {
-        var decryptedByteArray = ByteArray(numOfBlocks)
-        var decryptedBlock = ByteArray(16)
+        var decryptedByteArray = ByteArray(numOfBlocks * 16)
         for(i in 0..numOfBlocks-1)
         {
-            for(j in 0..15)
-            {
-                if(j==0) decryptedByteArray[i*16] = decrypt(iv, key, encryptedBlocks[i])
-                else block[j] = byteArray[i*16 + j]
-            }
+            val block = decrypt(iv, key, encryptedBlocks[i])
+            for(j in 0..15) decryptedByteArray[i*16+j] = block[j]
         }
         return decryptedByteArray
     }
 
-    fun getEncryptedBlocksByteArray(numOfBlocks:Int, byteArray:ByteArray):Array<ByteArray>
+    fun getEncryptedBlocksByteArray(numOfBlocks:Int, padding:Int, byteArray:ByteArray):Array<ByteArray>
     {
         var encryptedBlocks = Array<ByteArray>(numOfBlocks,{ ByteArray(16) })
-        for(i in 0..numOfBlocks)
+        for(i in 0..numOfBlocks-1)
         {
             val block = ByteArray(16)
-            for(j in 0..15)
-            {
-                if(j==0) block[j] = byteArray[i * 16]
-                else block[j] = byteArray[i*16 + j]
-            }
+            for(j in 0..15)block[j] = byteArray[i*16 + j]
             encryptedBlocks[i] = reverseBlockOrder(block)
         }
+        if(padding > 0) for(i in 0..padding-1) encryptedBlocks[numOfBlocks-1][i] = 0
         return encryptedBlocks
     }
 
