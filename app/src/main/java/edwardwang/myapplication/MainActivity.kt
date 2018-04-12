@@ -59,10 +59,10 @@ class MainActivity : AppCompatActivity() {
             System.out.println("Size: "+readInEncrypt.size)
 
             //get array of byte array blocks
-                //val numOfBlocks:Int = readInEncrypt.size/16
-                //val padding = readInEncrypt.size % 16
-                //var encryptedBlocks:Array<ByteArray> = getEncryptedBlocksByteArray(numOfBlocks,padding, readInEncrypt)
-            val encrypted = getProperEncryptedStreamFormat(readInEncrypt)
+            val numOfBlocks:Int = readInEncrypt.size/16
+            val padding = readInEncrypt.size % 16
+            var encryptedBlocks:Array<ByteArray> = getEncryptedBlocksByteArray(numOfBlocks,padding, readInEncrypt)
+            //val encrypted = getProperEncryptedStreamFormat(readInEncrypt)
 
             //get key - 00000001 00000000 00000000
             val key = ByteArray(16)
@@ -72,9 +72,9 @@ class MainActivity : AppCompatActivity() {
             val iv = ByteArray(16)
 
             //AES decrypts at 16 bytes at a given time
-                //val decryptedByteArray = getDecryptedByteArray(numOfBlocks, encryptedBlocks, iv, key)
+            val decryptedByteArray = getDecryptedByteArray(numOfBlocks + padding, encryptedBlocks, iv, key)
             //val decryptedByteArray = ByteArray(encrypted.size)
-            val decryptedByteArray = decrypt(iv, key, encrypted)
+            //val decryptedByteArray = decrypt(iv, key, encrypted)
 
             System.out.println("Decrypted Size: "+decryptedByteArray.size)
 
@@ -120,16 +120,18 @@ class MainActivity : AppCompatActivity() {
      * @param encrypted       : encrypted block
      * */
     fun decrypt(ivBytes:ByteArray, secretKeyBytes:ByteArray, encrypted:ByteArray):ByteArray {
-        val decrypted = ByteArray(encrypted.size)
+        //val decrypted = ByteArray(encrypted.size)
         val initializationVector = IvParameterSpec(ivBytes)
         val secretKeySpec = SecretKeySpec(secretKeyBytes, "AES_128")
         val cipher: Cipher = Cipher.getInstance("AES/CBC/NoPadding")
         cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, initializationVector)
+        /*
         for(block in 0..decrypted.size/16)
         {
             val decryptedBlock = ByteArray(16)
-            
+
         }
+        */
         return reverseBlockOrder(cipher.doFinal(encrypted))
     }
         /*
