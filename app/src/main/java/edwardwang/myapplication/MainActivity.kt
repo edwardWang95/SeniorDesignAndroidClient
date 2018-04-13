@@ -151,9 +151,12 @@ class MainActivity : AppCompatActivity() {
     fun getDecryptedByteArray(numOfBlocks: Int,encryptedBlocks:Array<ByteArray>, iv:ByteArray, key:ByteArray):ByteArray
     {
         var decryptedByteArray = ByteArray(numOfBlocks * 16)
+        var currIV = ByteArray(16)
         for(i in 0..numOfBlocks-1)
         {
-            val block = decrypt(iv, key, encryptedBlocks[i])
+            if(i==0) currIV = iv
+            else for(j in 0..15) currIV = encryptedBlocks[i-1]//currIV[i] = decryptedByteArray[(i-1)*16+j]
+            val block = decrypt(currIV, key, encryptedBlocks[i])
             for(j in 0..15) decryptedByteArray[i*16+j] = block[j]
         }
         return decryptedByteArray
