@@ -1,10 +1,12 @@
 package edwardwang.myapplication
 
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import java.io.*
 import java.net.InetAddress
@@ -52,9 +54,10 @@ class MainActivity : AppCompatActivity() {
         try
         {
             val serverOutputTextView:TextView = findViewById<TextView>(R.id.serverOutput)
+            val decryptedImageView = findViewById<ImageView>(R.id.decryptedImageView)
 
             //break encrypted file into 16 byte/128 bit blocks
-            val inputStream:InputStream = resources.openRawResource(R.raw.secret3)
+            val inputStream:InputStream = resources.openRawResource(R.raw.secretpic2)
             val readInEncrypt = inputStream.readBytes(16)
             System.out.println("Size: "+readInEncrypt.size)
 
@@ -80,7 +83,10 @@ class MainActivity : AppCompatActivity() {
 
             //convert char to ascii
             val charset = Charsets.US_ASCII
-            serverOutputTextView.text = decryptedByteArray.toString(charset)
+            //serverOutputTextView.text = decryptedByteArray.toString(charset)
+
+            val bitmap = BitmapFactory.decodeByteArray(decryptedByteArray,0,decryptedByteArray.size)
+            decryptedImageView.setImageBitmap(bitmap)
         }catch (e: IOException)
         {
             e.printStackTrace()
