@@ -21,14 +21,17 @@ import javax.crypto.spec.SecretKeySpec
 class MainActivity : AppCompatActivity() {
 
     var isConnected:Boolean = false
-    //val testFileKey = "000102030405060708090A0B0C0D0E0F".toByteArray()
+
+    val thisIpAddress = "172.24.130.61"
+    val thisPort = 1234
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         //widgets
         //setUpWidgets()
-        cipherTest()
+        //cipherTest()
+        connectToServer(thisIpAddress, thisPort)
     }
 
     fun setUpWidgets()
@@ -48,6 +51,7 @@ class MainActivity : AppCompatActivity() {
 
         }
     }
+
 
     fun cipherTest()
     {
