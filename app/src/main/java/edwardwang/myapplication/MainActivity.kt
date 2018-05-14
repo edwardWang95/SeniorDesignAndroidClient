@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         //setUpWidgets()
         //cipherTest()
         connectToServer(thisIpAddress, thisPort)
+        getEncryptedImageAndDisplay()
     }
 
     fun setUpWidgets()
@@ -49,6 +50,54 @@ class MainActivity : AppCompatActivity() {
         val disconnectButton = findViewById<Button>(R.id.disconnectButton)
         disconnectButton.setOnClickListener {
 
+        }
+    }
+
+    fun getEncryptedImageAndDisplay()
+    {
+        try
+        {
+            val serverOutputTextView:TextView = findViewById<TextView>(R.id.serverOutput)
+            val decryptedImageView = findViewById<ImageView>(R.id.decryptedImageView)
+
+            //break encrypted file into 16 byte/128 bit blocks
+            val inputStream:InputStream = resources.openRawResource(R.raw.secretpic2)
+            val readInEncrypt = inputStream.readBytes(16)
+            System.out.println("Size: "+readInEncrypt.size)
+
+
+            
+
+
+            //get array of byte array blocks
+            val numOfBlocks:Int = readInEncrypt.size/16
+            val padding = readInEncrypt.size % 16
+            var encryptedBlocks:Array<ByteArray> = getEncryptedBlocksByteArray(numOfBlocks,padding, readInEncrypt)
+            //val encrypted = getProperEncryptedStreamFormat(readInEncrypt)
+
+            //get key - 00000001 00000000 00000000
+            val key = ByteArray(16)
+            key[3] = 1.toByte()
+
+            //set initialization vector
+            val iv = ByteArray(16)
+
+            //AES decrypts at 16 bytes at a given time
+            val decryptedByteArray = getDecryptedByteArray(numOfBlocks + padding, encryptedBlocks, iv, key)
+            //val decryptedByteArray = ByteArray(encrypted.size)
+            //val decryptedByteArray = decrypt(iv, key, encrypted)
+
+            System.out.println("Decrypted Size: "+decryptedByteArray.size)
+
+            //convert char to ascii
+            val charset = Charsets.US_ASCII
+            //serverOutputTextView.text = decryptedByteArray.toString(charset)
+
+            val bitmap = BitmapFactory.decodeByteArray(decryptedByteArray,0,decryptedByteArray.size)
+            decryptedImageView.setImageBitmap(bitmap)
+        }catch (e: IOException)
+        {
+            e.printStackTrace()
         }
     }
 
